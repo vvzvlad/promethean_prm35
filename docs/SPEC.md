@@ -42,7 +42,7 @@
 - Android-сборка dnsmasq делает `select` на stdin, ожидая команд netd. На `/dev/null` она
   крутилась на 100% одного ядра (strace: `read(0)=0` / `pselect … in [0]` по кругу), поэтому
   stdin ей — FIFO, открытый на чтение и запись.
-- slimBOXtv при загрузке запускает скрипты из `/data/media/0/init.d` (так стартует tv-agent);
+- slimBOXtv при загрузке запускает скрипты из `/data/media/0/init.d` (так стартует androidclaw);
   `projector_net` запускается своей службой init из `/system/etc/init/projector-net.rc`.
 - Перезагрузка 2026-11-02 подтвердила автозапуск: `projector_net` поднял сеть, приложение
   стартовало по `BOOT_COMPLETED`. Через ~50 с после загрузки приставки соединение на 8000 ещё
