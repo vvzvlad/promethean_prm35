@@ -2,8 +2,8 @@
 
 Android app «Проектор» for the TV box GTKing_PRO (Android 9, API 28, rooted) that controls the
 Promethean PRM-35 projector hanging off the box's Ethernet port: remote on the TV screen, the same
-remote as a web page on port 8070, and an MCP server for the agent living on the box (androidclaw,
-`~/Data/Projects/androidclaw`). Plus the boot-time network setup on the box that
+remote as a web page on port 8070, and an MCP server for the agent living on the box (popcornclaw,
+`~/Data/Projects/popcornclaw`). Plus the boot-time network setup on the box that
 makes the projector reachable at all (`box/`).
 
 What it does and where it lives on the box — `README.md`. Verified facts about the projector and
@@ -30,7 +30,7 @@ The docker CLI points at a remote daemon: no bind mounts, the APK comes back via
 
 ## The live box
 
-- The box is shared: androidclaw, mpv, mpv_sendspin, SendSpin, FakeAtv, JamesDSP run there. Opening
+- The box is shared: popcornclaw, mpv, mpv_sendspin, SendSpin, FakeAtv, JamesDSP run there. Opening
   the app (`make install`, `am start`) puts the remote over whatever is playing; what is on screen
   shows `dumpsys activity activities | grep mResumedActivity`.
 - Port 8000 on the box's wlan0 is DNAT'd to the projector; the app uses 8070.
