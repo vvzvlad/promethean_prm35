@@ -1,0 +1,249 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Проектор</title>
+<style>
+  :root {
+    --bg: #141c26;
+    --pane: #1e2a38;
+    --btn: #2c3c50;
+    --btn-active: #3d5470;
+    --text: #e8edf2;
+    --muted: #9aa8b8;
+    --accent: #f2c14e;
+    --on: #3f8f5a;
+    --off: #a84646;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 16px;
+    background: var(--bg);
+    color: var(--text);
+    font: 18px/1.3 system-ui, sans-serif;
+  }
+  header { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 16px; margin-bottom: 12px; }
+  header h1 { margin: 0; font-size: 26px; }
+  #status { color: var(--text); }
+  #reply { color: var(--muted); font-size: 15px; width: 100%; min-height: 1.3em; }
+  main { display: grid; gap: 12px; grid-template-columns: 1fr; }
+  @media (min-width: 900px) {
+    main { grid-template-columns: 1fr 1.1fr 1fr; align-items: start; }
+    .tv main { grid-template-columns: 1fr 1.1fr 1fr 250px; }
+  }
+  #phone { text-align: center; }
+  #qr svg { display: block; width: 100%; height: auto; border-radius: 8px; }
+  #qr-url { margin-top: 8px; font-size: 16px; word-break: break-all; }
+  section { background: var(--pane); border-radius: 12px; padding: 12px; }
+  h2 { margin: 4px 0 8px; font-size: 15px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
+  h2:not(:first-child) { margin-top: 16px; }
+  .grid { display: grid; gap: 8px; }
+  .cols2 { grid-template-columns: 1fr 1fr; }
+  .cross { grid-template-columns: repeat(3, 1fr); }
+  .pair { display: grid; grid-template-columns: 1fr 72px 72px; gap: 8px; align-items: center; }
+  .pair + .pair { margin-top: 8px; }
+  .pair span { color: var(--muted); }
+  button {
+    min-height: 56px;
+    padding: 6px 8px;
+    border: 0;
+    border-radius: 10px;
+    background: var(--btn);
+    color: var(--text);
+    font: inherit;
+    font-size: 19px;
+    cursor: pointer;
+    touch-action: manipulation;
+    transition: transform .08s, background .08s;
+  }
+  button:active { background: var(--btn-active); }
+  .cross button { min-height: 72px; font-size: 24px; }
+  .cross .ok { background: var(--btn-active); font-weight: 700; }
+  .power-on { background: var(--on); }
+  .power-off { background: var(--off); }
+  button.busy { opacity: .6; }
+  button:focus { outline: none; }
+  button:focus-visible, .tv button:focus {
+    outline: 4px solid var(--accent);
+    outline-offset: 2px;
+    transform: scale(1.06);
+    position: relative;
+    z-index: 1;
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>Проектор</h1>
+  <span id="status">Состояние: …</span>
+  <div id="reply"></div>
+</header>
+<main>
+  <section>
+    <h2>Питание</h2>
+    <div class="grid cols2">
+      <button class="power-on" data-c="~PN">Вкл</button>
+      <button class="power-off" data-c="~PF">Выкл</button>
+    </div>
+    <h2>Вход</h2>
+    <div class="grid cols2">
+      <button data-c="~SH">HDMI</button>
+      <button data-c="~SR">VGA</button>
+      <button data-c="~SG">RGB2</button>
+      <button data-c="~SV">Видео</button>
+      <button data-c="~SS">S-Video</button>
+    </div>
+  </section>
+  <section>
+    <h2>Меню</h2>
+    <div class="grid cross">
+      <button data-c="~rM">Меню</button>
+      <button data-c="~rU" aria-label="Вверх">▲</button>
+      <button data-c="~rI">Вход</button>
+      <button data-c="~rL" aria-label="Влево">◀</button>
+      <button class="ok" data-c="~rN" id="ok">OK</button>
+      <button data-c="~rR" aria-label="Вправо">▶</button>
+      <button data-c="~rA">Авто</button>
+      <button data-c="~rD" aria-label="Вниз">▼</button>
+    </div>
+  </section>
+  <section>
+    <h2>Картинка</h2>
+    <div class="grid cols2">
+      <button data-c="~rB">Чёрный экран</button>
+      <button data-c="~rF">Стоп-кадр</button>
+    </div>
+    <h2>Настройка</h2>
+    <div class="pair"><span>Трапеция</span><button data-c="~rJ">−</button><button data-c="~rK">+</button></div>
+    <div class="pair"><span>Зум</span><button data-c="~rY">−</button><button data-c="~rZ">+</button></div>
+  </section>
+  <section id="phone" hidden>
+    <h2>Пульт на телефоне</h2>
+    <div id="qr"></div>
+    <div id="qr-url"></div>
+  </section>
+</main>
+<script src="/qrcode.js"></script>
+<script>
+  // On the TV box the page is opened by the app at 127.0.0.1 and driven by the D-pad.
+  const tv = location.hostname === '127.0.0.1';
+  if (tv) document.body.classList.add('tv');
+
+  const statusEl = document.getElementById('status');
+  const replyEl = document.getElementById('reply');
+  let pending = 0;
+  let statusTimer = null;
+
+  async function send(cmd, btn) {
+    pending++;
+    btn.classList.add('busy');
+    try {
+      const r = await fetch('/api/cmd', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        body: 'c=' + encodeURIComponent(cmd),
+      });
+      const j = await r.json();
+      replyEl.textContent = j.error ? `${cmd}: ошибка — ${j.error}` : `${cmd} → ${j.reply}`;
+    } catch (e) {
+      replyEl.textContent = `${cmd}: ошибка — ${e}`;
+    } finally {
+      pending--;
+      btn.classList.remove('busy');
+      scheduleStatus();
+    }
+  }
+
+  // A status read is three projector exchanges that take turns with button presses,
+  // so it waits until the presses settle instead of running after every single one.
+  function scheduleStatus() {
+    clearTimeout(statusTimer);
+    statusTimer = setTimeout(refreshStatus, 2500);
+  }
+
+  async function refreshStatus() {
+    if (pending) return scheduleStatus();
+    try {
+      const r = await fetch('/api/status');
+      const j = await r.json();
+      statusEl.textContent = j.error
+        ? `Нет связи с проектором: ${j.error}`
+        : `Питание: ${j.power} · Вход: ${j.input} · Лампа: ${j.lamp_hours} ч`;
+    } catch (e) {
+      statusEl.textContent = `Нет связи с пультом: ${e}`;
+    }
+  }
+
+  document.addEventListener('click', (e) => {
+    const btn = e.target.closest('button[data-c]');
+    if (btn) send(btn.dataset.c, btn);
+  });
+
+  // D-pad: arrows move focus to the nearest button in that direction, OK presses it.
+  const DIRS = {ArrowUp: [0, -1], ArrowDown: [0, 1], ArrowLeft: [-1, 0], ArrowRight: [1, 0]};
+
+  function center(el) {
+    const r = el.getBoundingClientRect();
+    return [r.left + r.width / 2, r.top + r.height / 2];
+  }
+
+  function moveFocus([dx, dy]) {
+    const buttons = [...document.querySelectorAll('button')];
+    const cur = document.activeElement;
+    if (!buttons.includes(cur)) { document.getElementById('ok').focus(); return; }
+    const [ax, ay] = center(cur);
+    let best = null;
+    let bestScore = Infinity;
+    for (const b of buttons) {
+      if (b === cur) continue;
+      const [bx, by] = center(b);
+      const along = (bx - ax) * dx + (by - ay) * dy;
+      if (along <= 1) continue;
+      const across = Math.abs((bx - ax) * dy) + Math.abs((by - ay) * dx);
+      const score = along + 2 * across;
+      if (score < bestScore) { bestScore = score; best = b; }
+    }
+    if (best) best.focus();
+  }
+
+  document.addEventListener('keydown', (e) => {
+    const dir = DIRS[e.key];
+    if (dir) {
+      e.preventDefault();
+      moveFocus(dir);
+    } else if (e.key === 'Enter' || e.keyCode === 13 || e.keyCode === 23) {
+      const el = document.activeElement;
+      if (el && el.matches('button[data-c]')) {
+        e.preventDefault();
+        el.click();
+      }
+    }
+  });
+
+  // On the TV: a QR code with the remote's address on the box's Wi-Fi, for phones.
+  async function showPhoneLink() {
+    const urlEl = document.getElementById('qr-url');
+    document.getElementById('phone').hidden = false;
+    try {
+      const j = await (await fetch('/api/info')).json();
+      if (!j.url) { urlEl.textContent = 'У приставки нет адреса в Wi-Fi'; return; }
+      const qr = qrcode(0, 'M');
+      qr.addData(j.url);
+      qr.make();
+      document.getElementById('qr').innerHTML = qr.createSvgTag({cellSize: 4, margin: 16, scalable: true});
+      urlEl.textContent = j.url;
+    } catch (e) {
+      urlEl.textContent = `Не узнать адрес: ${e}`;
+    }
+  }
+
+  if (tv) {
+    document.getElementById('ok').focus();
+    showPhoneLink();
+  }
+  refreshStatus();
+</script>
+</body>
+</html>
