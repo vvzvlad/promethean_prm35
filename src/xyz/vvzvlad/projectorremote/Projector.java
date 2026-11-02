@@ -27,7 +27,7 @@ import java.util.concurrent.locks.ReentrantLock;
  */
 final class Projector {
     private static final String TAG = "ProjectorRemote";
-    static final String HOST = "192.168.77.2";
+    static final String HOST = "10.10.10.10";
     private static final int PORT = 8000;
     private static final int TIMEOUT_MS = 2000;
     private static final long GAP_MS = 200;

@@ -8,7 +8,7 @@ makes the projector reachable at all (`box/`).
 
 What it does and where it lives on the box — `README.md`. Verified facts about the projector and
 the box, decisions and rejected variants — `docs/SPEC.md`. Host pages in the Netmap wiki:
-«GTKing_PRO 10.31.41.106» and «Promethean PRM-35 192.168.77.2».
+«GTKing_PRO 10.31.41.106» and «Promethean PRM-35 10.10.10.10».
 
 ## Structure
 
